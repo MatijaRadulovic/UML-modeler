@@ -302,20 +302,4 @@ public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
         p.parenthesise();
         AddNodeR(p);
     }
-
-    public void loadDiagram(Diagram d){
-        d.parenthesise();
-        if(getSelectedNode().getNode() instanceof Diagram dor){
-            d.setParent(((ClassyNodeComposite) dor.getParent()));
-            List<ClassyNode> added=new ArrayList<>(d.getChildren());
-            for (var c:added) {
-                c.setParent(dor);
-            }
-            dor.AddChildren(added);
-
-            MainFrame.getInstance().getPkgpane().getActiveDiagramP().reset();
-        }
-
-
-    }
 }

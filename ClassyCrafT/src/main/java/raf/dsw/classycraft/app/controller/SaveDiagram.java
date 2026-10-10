@@ -10,9 +10,6 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Paths;
 
 public class SaveDiagram extends AbstractClassyAction{
     public SaveDiagram() {
@@ -24,19 +21,11 @@ public class SaveDiagram extends AbstractClassyAction{
     @Override
     public void actionPerformed(ActionEvent e) {
         ClassyTreeItem selitem= MainFrame.getInstance().getTree().getSelectedNode();
-        if(selitem.getNode() instanceof Diagram d){
+        if(selitem!=null && selitem.getNode() instanceof Diagram d){
 
             JFileChooser fileChooser = new JFileChooser();
             File fil=null;
-            File file=new File(".");
-//            URL resource = getClass().getResource("/Templates");
-//            File file;
-//            try {
-//                file = Paths.get(resource.toURI()).toFile();
-//            } catch (URISyntaxException ex) {
-//                throw new RuntimeException(ex);
-//            }
-            fileChooser.setCurrentDirectory(file);
+            fileChooser.setCurrentDirectory(JacksonUtil.templateDir());
             if (fileChooser.showSaveDialog(MainFrame.getInstance()) == JFileChooser.APPROVE_OPTION) {
                 fil = fileChooser.getSelectedFile();
             }

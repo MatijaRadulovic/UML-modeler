@@ -12,6 +12,14 @@ import java.io.File;
 import java.io.IOException;
 
 public class JacksonUtil {
+    /** Folder the open/save template dialogs start in; created when missing. */
+    public static File templateDir() {
+        File dir = new File("templates");
+        if (!dir.isDirectory() && !dir.mkdirs())
+            return new File(".");
+        return dir;
+    }
+
     public static Project loadProject(File file) throws IOException {
         ObjectMapper objmapper=new ObjectMapper();
         Project p=objmapper.readValue(file, Project.class);

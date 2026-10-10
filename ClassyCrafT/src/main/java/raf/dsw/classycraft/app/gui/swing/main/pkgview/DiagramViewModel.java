@@ -22,7 +22,10 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
 public class DiagramViewModel implements IPublisher, ISubscriber
 {
@@ -78,6 +81,27 @@ public class DiagramViewModel implements IPublisher, ISubscriber
         }
         painters.add(cls);
         repaint(cls.getBounds());
+    }
+    /** Adds already positioned (world coordinates) elements: one model event, one repaint. Entities are painted below connections. */
+    public void addElements(List<DiagramElement> els){
+        diag.AddChildren(new ArrayList<>(els));
+        for (var e:els) {
+            if(e instanceof Interclass)
+                painters.add(PainterSimpleFactory.makePainter(e));
+        }
+        for (var e:els) {
+            if(e instanceof Connection)
+                painters.add(PainterSimpleFactory.makePainter(e));
+        }
+        repaint(null);
+    }
+    public void removeElements(List<DiagramElement> els){
+        Set<ClassyNode> gone=Collections.newSetFromMap(new IdentityHashMap<>()); //equals() is name based
+        gone.addAll(els);
+        painters.removeIf(p->gone.contains(p.getElement()));
+        selPainters.removeIf(p->gone.contains(p.getElement()));
+        diag.removeChildren(new ArrayList<>(els));
+        repaint(null);
     }
     private Point tWorldCoords(Point pos){
         Point2D p= null;
