@@ -19,6 +19,7 @@ public class MoveState implements State {
 
     @Override
     public void mouseUp(MouseEvent pos, DiagramView dview) {
+        dview.getModel().endMove();
         ppoint=null;
         movEl =false;
         movSel=false;

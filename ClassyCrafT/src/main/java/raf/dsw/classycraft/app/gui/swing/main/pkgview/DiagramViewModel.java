@@ -33,6 +33,7 @@ public class DiagramViewModel implements IPublisher, ISubscriber
     ConnectionPainter curConn;
     AffineTransform trans;
     CommandManager manager;
+    MoveCommand activeMove;
 
 
 
@@ -257,16 +258,27 @@ public class DiagramViewModel implements IPublisher, ISubscriber
     }
 
     public void transEl(ElementPainter e, int dx, int dy){
-        manager.addCommand(new MoveCommand(this, e, dx, dy, trans));
+        transElements(List.of(e), dx, dy);
     }
     public void transElements(List<ElementPainter> le,int dx,int dy){
+        if (activeMove != null) {
+            activeMove.extend(dx, dy);
+            return;
+        }
+        var movable = new ArrayList<ElementPainter>();
         for (var e:le) {
             if(e instanceof InterClassPainter)
-                transEl(e,dx,dy);
+                movable.add(e);
         }
+        activeMove = new MoveCommand(this, movable, dx, dy, trans);
+        manager.addCommand(activeMove);
     }
     public void transSel(int dx,int dy){
         transElements(selPainters,dx,dy);
+    }
+    // called on mouse release, next drag starts a new undo step
+    public void endMove(){
+        activeMove = null;
     }
 
 
