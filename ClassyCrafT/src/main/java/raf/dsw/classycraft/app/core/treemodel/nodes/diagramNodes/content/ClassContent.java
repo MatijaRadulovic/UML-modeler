@@ -1,5 +1,6 @@
 package raf.dsw.classycraft.app.core.treemodel.nodes.diagramNodes.content;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Getter;
@@ -22,6 +23,7 @@ public abstract class ClassContent {
 
     protected String name;
     protected Visibility v;
+    @JsonProperty("dataType") //"type" is taken by the type-id property
     protected String type;
 
     public ClassContent(String name, Visibility v, String type) {

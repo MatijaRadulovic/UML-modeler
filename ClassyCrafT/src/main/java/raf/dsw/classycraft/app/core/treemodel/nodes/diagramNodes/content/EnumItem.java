@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@JsonTypeName("enu")
+@JsonTypeName("ite")
 public class EnumItem extends ClassContent {
     public EnumItem() {
     }

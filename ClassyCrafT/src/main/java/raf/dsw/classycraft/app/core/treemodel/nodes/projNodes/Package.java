@@ -65,14 +65,4 @@ public class Package extends ClassyNodeComposite implements IPublisher {
         }
         return (Project) currper.getParent();
     }
-    public void fixxx(){
-        for (var c:children) {
-            if(c instanceof Package p){
-                p.fixxx();
-            }
-            else if (c instanceof Diagram d){
-                d.icanfixthat();
-            }
-        }
-    }
 }

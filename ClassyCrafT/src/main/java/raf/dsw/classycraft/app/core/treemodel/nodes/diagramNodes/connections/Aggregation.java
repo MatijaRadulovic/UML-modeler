@@ -7,7 +7,7 @@ import raf.dsw.classycraft.app.core.treemodel.nodes.diagramNodes.entities.Interc
 import raf.dsw.classycraft.app.core.treemodel.nodes.projNodes.Diagram;
 @Getter
 @Setter
-@JsonTypeName("agr")
+@JsonTypeName("agg")
 public class Aggregation extends Connection{
     public Aggregation(Interclass source, String name, Diagram d) {
         super(source, name, d);

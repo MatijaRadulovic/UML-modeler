@@ -39,6 +39,7 @@ public abstract class ClassyNodeComposite extends ClassyNode{
             @JsonSubTypes.Type(value = ClassyEnum.class, name = "enu"),
 
             @JsonSubTypes.Type(value = Aggregation.class, name = "agg"),
+            @JsonSubTypes.Type(value = Generalization.class, name = "gen"),
             @JsonSubTypes.Type(value = Composition.class, name = "comp"),
             @JsonSubTypes.Type(value = Dependency.class, name = "dep"),
 

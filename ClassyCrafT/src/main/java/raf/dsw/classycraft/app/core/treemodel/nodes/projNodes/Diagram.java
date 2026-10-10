@@ -45,18 +45,6 @@ public class Diagram extends ClassyNodeComposite implements IPublisher {
             sub.react(notification);
         }
     }
-    public void icanfixthat(){
-        for(int i=0;i<getChildren().size();i++){
-            if(children.get(i) instanceof Connection con){
-                Interclass s=con.getSource();
-                Interclass d=con.getDestination();;
-                children.remove(s);
-                children.remove(d);
-                AddChild(s);
-                AddChild(d);
-            }
-        }
-    }
     @Override
     public void AddChild(ClassyNode child) {
         super.AddChild(child);

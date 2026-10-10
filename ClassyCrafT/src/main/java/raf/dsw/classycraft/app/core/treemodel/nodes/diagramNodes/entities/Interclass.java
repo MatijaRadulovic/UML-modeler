@@ -1,7 +1,9 @@
 package raf.dsw.classycraft.app.core.treemodel.nodes.diagramNodes.entities;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Getter;
 import lombok.Setter;
 import raf.dsw.classycraft.app.core.treemodel.nodes.diagramNodes.DiagramElement;
@@ -23,7 +25,8 @@ import java.util.Objects;
 
 @Getter
 @Setter
-
+//connections reference their ends by id, so a loaded connection points at the diagram's own element, not a copy
+@JsonIdentityInfo(generator = ObjectIdGenerators.IntSequenceGenerator.class, property = "id")
 public abstract class Interclass extends DiagramElement implements Cloneable {
 
     Visibility vis;

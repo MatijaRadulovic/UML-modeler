@@ -273,7 +273,6 @@ public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
         p.setParent(((ClassyNodeComposite) getRoot().getNode()));
         p.parenthesise();
         AddNodeR(p);
-        //p.fixme();
     }
 
     public void loadDiagram(Diagram d){
@@ -284,7 +283,6 @@ public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
                 c.setParent(dor);
                 dor.AddChild(c);
             }
-            //d.icanfixthat();//i cannot fix it :(
 
             MainFrame.getInstance().getPkgpane().getActiveDiagramP().reset();
         }

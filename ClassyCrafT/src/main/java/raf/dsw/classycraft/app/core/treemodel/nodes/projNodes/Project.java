@@ -75,10 +75,4 @@ public class Project extends ClassyNodeComposite implements IPublisher {
             sub.react(notification);
         }
     }
-    public void fixme(){
-        for (var c:children) {
-            ((Package) c).fixxx();
-        }
-    }
-
 }
