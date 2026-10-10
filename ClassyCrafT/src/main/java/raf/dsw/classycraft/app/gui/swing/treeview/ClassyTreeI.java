@@ -25,8 +25,7 @@ import javax.swing.*;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
     private DefaultTreeModel treeModel;
@@ -36,6 +35,9 @@ public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
         return treeModel;
     }
 
+    //node -> its tree item, so items are found in O(1) instead of searching the whole tree
+    private final Map<ClassyNode, ClassyTreeItem> items=new IdentityHashMap<>();
+
     ClassyTreeItem openedItem;
     public void setOpenedItem(ClassyTreeItem sel){
         openedItem =sel;
@@ -44,6 +46,7 @@ public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
     @Override
     public ClassyTreeView generateTree(ProjectExplorer pe) {
         ClassyTreeItem root= new ClassyTreeItem(pe);
+        items.put(pe,root);
         treeModel=new DefaultTreeModel(root);
 
         treeView= new ClassyTreeView(treeModel);
@@ -53,22 +56,86 @@ public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
         return treeView;
     }
 
-    public void AddChildItem(ClassyTreeItem parent, ClassyNode node){ //main add
+    private ClassyTreeItem itemOf(ClassyNode node){
+        return items.get(node);
+    }
+    private ClassyTreeItem newItem(ClassyNode node){ //creates and registers the item, does not touch the view
         if(node instanceof Diagram d){ //caution!
             d.addSubscriber(this);
         }
+        ClassyTreeItem item=new ClassyTreeItem(node);
+        items.put(node,item);
+        return item;
+    }
+    private ClassyTreeItem buildItems(ClassyNode node){ //item together with the items of all descendants
+        ClassyTreeItem item=newItem(node);
+        if(node instanceof ClassyNodeComposite comp){
+            for (var c:comp.getChildren()) {
+                item.add(buildItems(c));
+            }
+        }
+        return item;
+    }
+    private void forget(ClassyTreeItem item){ //unregisters item and its descendants
+        var it=item.depthFirstEnumeration();
+        while (it.hasMoreElements()){
+            items.remove(((ClassyTreeItem) it.nextElement()).getNode());
+        }
+    }
 
-        ClassyTreeItem newItem=new ClassyTreeItem(node);
-        parent.add(newItem);
+    public void AddChildItem(ClassyTreeItem parent, ClassyNode node){ //main add
+        treeModel.insertNodeInto(newItem(node),parent,parent.getChildCount());
         treeView.expandPath(new TreePath(parent.getPath()) );
-        SwingUtilities.updateComponentTreeUI(treeView);
-
+    }
+    private void AddChildItems(ClassyTreeItem parent, List<ClassyNode> nodes){ //one view update for the whole batch
+        if(nodes.isEmpty()) return;
+        int[] indices=new int[nodes.size()];
+        int first=parent.getChildCount();
+        for (int i=0;i<indices.length;i++) {
+            parent.add(newItem(nodes.get(i)));
+            indices[i]=first+i;
+        }
+        treeModel.nodesWereInserted(parent,indices);
+        treeView.expandPath(new TreePath(parent.getPath()) );
+    }
+    private void addItems(List<ClassyNode> nodes){ //nodes already added to the model, grouped by parent
+        Map<ClassyTreeItem,List<ClassyNode>> byParent=new LinkedHashMap<>();
+        for (ClassyNode c:nodes) {
+            ClassyTreeItem p=itemOf(c.getParent());
+            if(p!=null)
+                byParent.computeIfAbsent(p,k->new ArrayList<>()).add(c);
+        }
+        byParent.forEach(this::AddChildItems);
+    }
+    private void removeItems(List<ClassyNode> nodes){ //nodes already removed from the model, grouped by parent
+        Map<ClassyTreeItem,List<ClassyTreeItem>> byParent=new LinkedHashMap<>();
+        for (ClassyNode c:nodes) {
+            ClassyTreeItem item=itemOf(c);
+            if(item!=null && item.getParent()!=null)
+                byParent.computeIfAbsent((ClassyTreeItem) item.getParent(),k->new ArrayList<>()).add(item);
+        }
+        byParent.forEach((parent,gone)->{
+            gone.sort(Comparator.comparingInt(parent::getIndex));
+            int[] indices=new int[gone.size()];
+            Object[] removed=new Object[gone.size()];
+            for (int i=0;i<indices.length;i++) {
+                indices[i]=parent.getIndex(gone.get(i));
+                removed[i]=gone.get(i);
+            }
+            for (ClassyTreeItem item:gone) {
+                parent.remove(item);
+                forget(item);
+            }
+            treeModel.nodesWereRemoved(parent,indices,removed);
+        });
     }
     public void Update(ClassyTreeItem parent){
-        parent.removeAllChildren();
-        for (var c: ((ClassyNodeComposite) parent.getNode()).getChildren()) {
-            AddChildItem(parent,c);
+        List<ClassyNode> old=new ArrayList<>();
+        for (int i=0;i<parent.getChildCount();i++) {
+            old.add(((ClassyTreeItem) parent.getChildAt(i)).getNode());
         }
+        removeItems(old);
+        AddChildItems(parent,new ArrayList<>(((ClassyNodeComposite) parent.getNode()).getChildren()));
     }
     public boolean AddChild(ClassyTreeItem parentItem, String type) {
         if(! (parentItem.getNode() instanceof ClassyNodeComposite parentNode) ){
@@ -102,7 +169,7 @@ public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
         item.getNode().setName(newName);
         ClassyNodeComposite node=((ClassyNodeComposite) item.getNode().getParent());
         if (node.isUnique(item.getNode())){
-            SwingUtilities.updateComponentTreeUI(treeView);
+            treeModel.nodeChanged(item);
             return true;
         }
         item.setName(oldName);
@@ -136,15 +203,10 @@ public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
         ClassyNode node= item.getNode();
         ((ClassyNodeComposite) node.getParent()).removeChild(node);
 
-        ((DefaultTreeModel)treeView.getModel()).removeNodeFromParent(item);
+        treeModel.removeNodeFromParent(item);
+        forget(item);
         treeView.expandPath(treeView.getSelectionPath());
-        SwingUtilities.updateComponentTreeUI(treeView);
         return true;
-    }
-    private void RemoveTreeItem(ClassyTreeItem item){
-        ((DefaultTreeModel)treeView.getModel()).removeNodeFromParent(item);
-        SwingUtilities.updateComponentTreeUI(treeView);
-
     }
     @Override
     public boolean AppendChild(String type) {
@@ -197,34 +259,14 @@ public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
     @Override
     public void react(Object notification) {  //diagrams belonging to curently selected package has elements added/removed, diagram elemnet name chaged...
         if(notification instanceof NodeChildrenClassyEvent ech){
-            for (ClassyNode c : ech.getAdded()) { //diagram elements
-                AddChildSel(c);
-            }
-            for (ClassyNode c : ech.getRemoved()) {
-                RemoveChildSel(c);
-            }
-            SwingUtilities.updateComponentTreeUI(treeView);
-
+            addItems(ech.getAdded()); //diagram elements
+            removeItems(ech.getRemoved());
         }
         else if(notification instanceof NodeChangedClassyEvent nch){
-            ClassyNode c=nch.getNode();
-            var p=c.getParent();
-            var x=find(getRoot(),c);
-            //x.setName2(nch.getNode().getName());
-            SwingUtilities.updateComponentTreeUI(treeView);
-
-
+            ClassyTreeItem item=itemOf(nch.getNode());
+            if(item!=null)
+                treeModel.nodeChanged(item);
         }
-    }
-    public ClassyTreeItem find(ClassyTreeItem anc,ClassyNode node){
-        var it=anc.depthFirstEnumeration();
-        while (it.hasMoreElements()){
-            ClassyTreeItem n= ((ClassyTreeItem) it.nextElement());
-            if(n.getNode()==node){
-                return n;
-            }
-        }
-        return null;
     }
 
     public ClassyTreeItem getRoot(){
@@ -232,33 +274,24 @@ public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
     }
 
     public void RemoveNode(ClassyNode child){
-        child.getParent();
-        var x=find(getRoot(),child);
-        RemoveNode(x);
-    }
-    public void RemoveChildSel(ClassyNode child){
-        child.getParent();
-        var x=find(openedItem,child);
-        RemoveTreeItem(x);
-    }
-    public void AddChildSel(ClassyNode child){
-
-        var x=find(getRoot(),child.getParent());//diagram
-        AddChildItem(x,child);
+        var x=itemOf(child);
+        if(x!=null)
+            RemoveNode(x);
     }
     public void AddNode(ClassyNode child){
-        child.getParent();
-        var x=find(getRoot(),child.getParent());
-        AddChildItem(x,child);
+        AddChildItem(itemOf(child.getParent()),child);
     }
-    public void AddNodeR(ClassyNode child){
-        AddNode(child);
-        if(child instanceof ClassyNodeComposite comp){
-            for (var c:comp.getChildren()) {
-                AddNodeR(c);
-            }
+    public void AddNodeR(ClassyNode child){ //child with all descendants, inserted into the view once
+        ClassyTreeItem parent=itemOf(child.getParent());
+        ClassyTreeItem item=buildItems(child);
+        treeModel.insertNodeInto(item,parent,parent.getChildCount());
+        treeView.expandPath(new TreePath(parent.getPath()));
+        var it=item.depthFirstEnumeration();
+        while (it.hasMoreElements()){
+            ClassyTreeItem n=(ClassyTreeItem) it.nextElement();
+            if(n.getChildCount()>0)
+                treeView.expandPath(new TreePath(n.getPath()));
         }
-
     }
 
 
