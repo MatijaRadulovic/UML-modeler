@@ -1,0 +1,46 @@
+# Maven build output
+target/
+dependency-reduced-pom.xml
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+
+# Compiled / packaged
+*.class
+*.jar
+*.war
+
+# Logs
+*.log
+logs/
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+out/
+
+# Eclipse / NetBeans
+.classpath
+.project
+.settings/
+nbproject/
+
+# VS Code
+.vscode/
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code local settings
+.claude/
