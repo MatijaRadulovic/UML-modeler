@@ -3,6 +3,7 @@ package raf.dsw.classycraft.app.gui.swing.main.pkgview;
 import raf.dsw.classycraft.app.controller.events.NodeChildrenClassyEvent;
 import raf.dsw.classycraft.app.controller.events.NodeChangedClassyEvent;
 import raf.dsw.classycraft.app.core.msggen.ISubscriber;
+import raf.dsw.classycraft.app.core.treemodel.nodes.abstractNodes.ClassyNode;
 import raf.dsw.classycraft.app.core.treemodel.nodes.projNodes.Diagram;
 import raf.dsw.classycraft.app.core.treemodel.nodes.projNodes.Package;
 
@@ -55,16 +56,13 @@ public class PackageTabbedPane extends JTabbedPane implements ISubscriber {
 
         }
         else if(notification instanceof NodeChildrenClassyEvent cdat){
-            Diagram child;
-            while (cdat.hasNextRemoved()){
-                child= ((Diagram) cdat.getNextRemoved());
-                removeTab(child);
+            for (ClassyNode c : cdat.getRemoved()) {
+                if(c instanceof Diagram child)
+                    removeTab(child);
             }
-            while (cdat.hasNextAdded()){
-                if(cdat.getNextAdded() instanceof Diagram){
-                child= ((Diagram) cdat.getNextAdded());
-                addTab(child);
-                }
+            for (ClassyNode c : cdat.getAdded()) {
+                if(c instanceof Diagram child)
+                    addTab(child);
             }
         }
     }

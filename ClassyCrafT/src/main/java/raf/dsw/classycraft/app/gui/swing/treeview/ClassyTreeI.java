@@ -80,10 +80,7 @@ public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
         }
 
         parentNode.AddChild(newNode);
-        AddChildItem(parentItem,newNode);
-
-        if(newNode instanceof Diagram diz)
-            diz.addSubscriber(this);
+        AddChildItem(parentItem,newNode); //subscribes to new diagrams
         return true;
     }
 
@@ -200,12 +197,10 @@ public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
     @Override
     public void react(Object notification) {  //diagrams belonging to curently selected package has elements added/removed, diagram elemnet name chaged...
         if(notification instanceof NodeChildrenClassyEvent ech){
-            while (ech.hasNextAdded()){
-                ClassyNode c=ech.getNextAdded();//diagram element
+            for (ClassyNode c : ech.getAdded()) { //diagram elements
                 AddChildSel(c);
             }
-            while(ech.hasNextRemoved()){
-                ClassyNode c=ech.getNextRemoved();
+            for (ClassyNode c : ech.getRemoved()) {
                 RemoveChildSel(c);
             }
             SwingUtilities.updateComponentTreeUI(treeView);
@@ -279,10 +274,11 @@ public class ClassyTreeI implements ClassyTree, IPublisher, ISubscriber {
         d.parenthesise();
         if(getSelectedNode().getNode() instanceof Diagram dor){
             d.setParent(((ClassyNodeComposite) dor.getParent()));
-            for (var c:d.getChildren()) {
+            List<ClassyNode> added=new ArrayList<>(d.getChildren());
+            for (var c:added) {
                 c.setParent(dor);
-                dor.AddChild(c);
             }
+            dor.AddChildren(added);
 
             MainFrame.getInstance().getPkgpane().getActiveDiagramP().reset();
         }

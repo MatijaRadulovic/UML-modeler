@@ -12,7 +12,10 @@ import raf.dsw.classycraft.app.core.treemodel.nodes.diagramNodes.entities.Interc
 import raf.dsw.classycraft.app.gui.swing.painters.ConnectionPainter;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
 @JsonTypeName("diag")
 public class Diagram extends ClassyNodeComposite implements IPublisher {
@@ -49,6 +52,18 @@ public class Diagram extends ClassyNodeComposite implements IPublisher {
     public void AddChild(ClassyNode child) {
         super.AddChild(child);
         notifySubscribers(NodeChildrenClassyEvent.childAddedEvent(child));
+    }
+    public void AddChildren(List<ClassyNode> added) { //one event for the whole batch
+        if(added.isEmpty()) return;
+        children.addAll(added);
+        notifySubscribers(NodeChildrenClassyEvent.childrenAddedEvent(added));
+    }
+    public void removeChildren(List<ClassyNode> removed) {
+        if(removed.isEmpty()) return;
+        Set<ClassyNode> gone=Collections.newSetFromMap(new IdentityHashMap<>()); //equals() is name based, compare identity
+        gone.addAll(removed);
+        children.removeIf(gone::contains);
+        notifySubscribers(NodeChildrenClassyEvent.childrenRemovedEvent(removed));
     }
     @Override
     public void removeChild(ClassyNode child) {

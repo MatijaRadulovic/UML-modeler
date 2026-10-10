@@ -6,41 +6,28 @@ import raf.dsw.classycraft.app.core.treemodel.nodes.abstractNodes.ClassyNodeComp
 import java.util.*;
 
 public class NodeChildrenClassyEvent extends ClassyEvent{
-    List<ClassyNode> childrenl;
-    ListIterator<ClassyNode> children;
+    private final List<ClassyNode> added;
+    private final List<ClassyNode> removed;
 
-    List<ClassyNode> rchildrenl;
-    ListIterator<ClassyNode> rchildren;
-    public void reset(){
-        children=childrenl.listIterator();
-        rchildren=rchildrenl.listIterator();
-    }
     public boolean isRemoved(){
-        return !rchildrenl.isEmpty();
+        return !removed.isEmpty();
     }
     public boolean isAdded(){
-        return !childrenl.isEmpty();
+        return !added.isEmpty();
     }
-    public ClassyNode getNextAdded(){
-        return children.next();
+    //plain lists, so every subscriber sees all of them
+    public List<ClassyNode> getAdded(){
+        return added;
     }
-    public boolean hasNextAdded(){
-        return children.hasNext();
-    }
-    public ClassyNode getNextRemoved(){
-        return rchildren.next();
-    }
-    public boolean hasNextRemoved(){
-        return rchildren.hasNext();
+    public List<ClassyNode> getRemoved(){
+        return removed;
     }
     public ClassyNodeComposite getParent(){
         return ((ClassyNodeComposite) source);
     }
     public NodeChildrenClassyEvent(List<ClassyNode> a,List<ClassyNode> r){
-        childrenl=a;
-        rchildrenl=r;
-        children=childrenl.listIterator();
-        rchildren=rchildrenl.listIterator();
+        added=Collections.unmodifiableList(new ArrayList<>(a));
+        removed=Collections.unmodifiableList(new ArrayList<>(r));
     }
     public static ClassyEvent childrenAddedEvent(List<ClassyNode> c){
         return new NodeChildrenClassyEvent(c,new ArrayList<ClassyNode>());
