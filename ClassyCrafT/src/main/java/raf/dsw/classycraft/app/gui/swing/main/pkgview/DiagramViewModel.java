@@ -58,6 +58,14 @@ public class DiagramViewModel implements IPublisher, ISubscriber
     public void repaint(Rectangle r){
         notifySubscribers(new PaintClassyEvent(this,null));
     }
+    /** Resizes entities to their content, after it was edited. */
+    public void relayout(){
+        for (var p:painters) {
+            if(p instanceof InterClassPainter i)
+                i.layout();
+        }
+        repaint(null);
+    }
     public void initialize(){
         for (var e:diag.getChildren()) {
             AddPainter(PainterSimpleFactory.makePainter((DiagramElement) e));
@@ -121,14 +129,14 @@ public class DiagramViewModel implements IPublisher, ISubscriber
     }
     public ElementPainter findPainter(ClassyNode node){
         for (var p:painters) {
-            if(p.getElement().equals(node)){
+            if(p.getElement()==node){ //equals() is name based
                 return p;
             }
         }
         return null;
     }
     private void RemoveAffilConn(ElementPainter p){
-        for (ElementPainter painter : painters) {
+        for (ElementPainter painter : new ArrayList<>(painters)) { //RemovePainter changes painters
             if (painter instanceof ConnectionPainter cp) {
                 if (cp.getElement().getSource() == p.getElement() || cp.getElement().getDestination() == p.getElement()) {
                     RemovePainter(cp);

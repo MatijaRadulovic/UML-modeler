@@ -4,7 +4,6 @@ import raf.dsw.classycraft.app.core.ApplicationFramework;
 import raf.dsw.classycraft.app.core.msggen.Message;
 
 import java.io.*;
-import java.util.Objects;
 
 public class FileLogger implements Logger{
     File logfile;
@@ -12,7 +11,10 @@ public class FileLogger implements Logger{
     public FileLogger() {
         ApplicationFramework.getInstance().getMsgGen().addSubscriber(this);
 
-        logfile= new File(Objects.requireNonNull(getClass().getResource("/logs/log.txt")).getPath());
+        logfile = new File("logs/log.txt");
+        File dir = logfile.getParentFile();
+        if (dir != null && !dir.exists() && !dir.mkdirs())
+            System.err.println("Could not create log directory: " + dir.getAbsolutePath());
     }
 
     @Override

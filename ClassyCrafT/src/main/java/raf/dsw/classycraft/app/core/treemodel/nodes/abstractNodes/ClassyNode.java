@@ -70,6 +70,6 @@ public  abstract class ClassyNode implements Cloneable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, parent);
+        return Objects.hash(getClass().getName(), FullNameGet()); //same fields as equals(), parent/children are not hashed (cycle)
     }
 }

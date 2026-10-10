@@ -19,7 +19,7 @@ public class EditContentState implements State {
         Interclass ic= ((Interclass) e.getElement());
         EditEntDialog d=EditEntDialog.getDialog(ic);
         d.ShowDialog(MainFrame.getInstance());
-        dview.repaint(null);
+        dview.relayout();
     }
 
     @Override

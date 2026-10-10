@@ -18,7 +18,6 @@ import raf.dsw.classycraft.app.core.treemodel.nodes.projNodes.Project;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Getter
 @Setter
@@ -59,7 +58,7 @@ public abstract class ClassyNodeComposite extends ClassyNode{
         children.add((ClassyNode) child);
     }
     public void removeChild(ClassyNode child){
-        children.remove(child);
+        children.removeIf(c->c==child); //equals() is name based, so List.remove could drop another node
     }
 
     public List<ClassyNode> getChildren() {
@@ -105,10 +104,5 @@ public abstract class ClassyNodeComposite extends ClassyNode{
             }
         }
         return true;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), children);
     }
 }
